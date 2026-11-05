@@ -1,6 +1,8 @@
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
+import { seedAttendance } from "./seedAttendance.js";
+import { runShortageAlerts } from "../src/lib/alerts.js";
 
 const prisma = new PrismaClient();
 const PASSWORD = process.env.SEED_PASSWORD || "Sutra@2026"; // demo only
@@ -75,10 +77,11 @@ async function main() {
       name: i === 12 ? "Subhashree Mohanty" : person(i),
       category: CATS[i % 5],
       guardianPhone: phone(i),
-      isMinor: i <= 4,              // a few first-years who are minors
-      guardianConsent: i <= 3,      // student 4 has consent pending (DPDP demo)
+      isMinor: i <= 4,
+      guardianConsent: i <= 3,
     });
   }
+
   // 12 ME students: ENG-24-ME-0171..0182. 0177 is the brief's Ankit Panda.
   for (let i = 1; i <= 12; i++) {
     students.push({
@@ -89,10 +92,22 @@ async function main() {
       guardianPhone: phone(100 + i),
     });
   }
+
   await prisma.student.createMany({ data: students });
+
+  // Seed attendance history and generate shortage alerts.
+  await seedAttendance(prisma);
+
+  const alerts = await runShortageAlerts(campusId, { db: prisma });
+  console.log(`Shortage alert log rows: ${alerts.created}`);
 
   console.log(`Seeded: 1 campus, 6 users, 2 programmes, ${students.length} students.`);
   console.log(`Demo logins (password "${PASSWORD}"): admin@sutra.demo, sanjay@sutra.demo`);
 }
 
-main().catch((e) => { console.error(e); process.exit(1); }).finally(() => prisma.$disconnect());
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(() => prisma.$disconnect());
