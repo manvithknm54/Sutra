@@ -6,6 +6,7 @@ import authRouter from "./routes/auth.js";
 import mastersRouter from "./routes/masters.js";
 import studentsRouter from "./routes/students.js";
 import { requireAuth } from "./middleware/auth.js";
+import attendanceRouter from "./routes/attendance.js";
 
 export const app = express();
 
@@ -22,6 +23,7 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/auth", authRouter);
 app.use("/api/masters", requireAuth, mastersRouter);
 app.use("/api/students", requireAuth, studentsRouter);
+app.use("/api/attendance", requireAuth, attendanceRouter);
 
 app.use("/api", (_req, res) => res.status(404).json({ error: "Not found" }));
 
