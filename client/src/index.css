@@ -1,21 +1,14 @@
 :root {
-  --canvas: #f9f9ff; --surface: #ffffff; --surface-low: #f3f3fa; --surface-mid: #ededf4;
+  --canvas: #ffffff; --surface: #ffffff; --surface-low: #f8fafc; --surface-mid: #f1f5f9;
   --ink: #15171c; --ink-2: #6a6f7a; --line: #e9e7e2; --line-2: #bec9c4;
   --teal: #0b6e5b; --teal-press: #085446; --teal-tint: #e6f2ef; --teal-ink: #005444;
   --risk: #cf3a2e; --risk-tint: #fbebea;
   --chip: #f5f4f0; --hover: #f8f8f6;
   --r-card: 12px; --r-ctl: 9px; --r-tag: 6px;
   --pop: 0 1px 3px rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.02);
-  color-scheme: light dark;
+  color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --canvas: #111215; --surface: #181a1f; --surface-low: #1d2025; --surface-mid: #23262c;
-    --ink: #f3f4f6; --ink-2: #969ca8; --line: #272a33; --line-2: #333742;
-    --teal: #128a73; --teal-press: #0f7662; --teal-tint: #173129; --teal-ink: #7fd4bf;
-    --risk: #e04b3e; --risk-tint: #2f1d1c; --chip: #1f2229; --hover: #1c1f25;
-  }
-}
+/* Light theme is kept active for the clean white Sutra interface. */
 
 * { box-sizing: border-box; }
 html, body, #root { min-height: 100%; }
@@ -167,13 +160,13 @@ tbody tr:hover td { background: var(--hover); }
 .splash { min-height: 100dvh; display: grid; place-items: center; }
 
 /* ---------- Login ---------- */
-.auth-wrap { min-height: 100dvh; display: grid; place-items: center; padding: 24px; }
-.auth-card { display: grid; grid-template-columns: 5fr 7fr; width: 100%; max-width: 1024px; overflow: hidden;
-  background: var(--surface); border: 1px solid var(--line); border-radius: 16px; }
-.auth-left { padding: 40px; display: flex; flex-direction: column; justify-content: space-between; gap: 32px;
+.auth-wrap { min-height: 100dvh; padding: 0; display: block; }
+.auth-card { display: grid; grid-template-columns: 5fr 7fr; min-height: 100dvh; width: 100%; max-width: none;
+  background: var(--surface); border: 0; border-radius: 0; overflow: hidden; }
+.auth-left { padding: 56px 64px; display: flex; flex-direction: column; justify-content: space-between; gap: 32px;
   background: var(--surface-low); border-right: 1px solid var(--line); }
-.auth-left h1 { font-size: 30px; line-height: 36px; letter-spacing: -0.025em; }
-.auth-left p.lead { font-size: 13px; line-height: 20px; color: var(--ink-2); max-width: 320px; margin-top: 12px; }
+.auth-left h1 { font-size: clamp(34px, 3.4vw, 48px); line-height: 1.08; letter-spacing: -0.03em; }
+.auth-left p.lead { font-size: 15px; line-height: 24px; color: var(--ink-2); max-width: 380px; margin-top: 16px; }
 .brand-row { display: flex; align-items: center; gap: 12px; }
 .brand-row b { display: block; font-size: 15px; letter-spacing: -0.01em; }
 .campuses { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
@@ -181,8 +174,8 @@ tbody tr:hover td { background: var(--hover); }
 .campus b { display: block; font-size: 11px; font-weight: 600; }
 .campus span { display: block; font-size: 10px; color: var(--ink-2); }
 .campus.live b { color: var(--teal-ink); }
-.auth-right { padding: 56px; display: flex; flex-direction: column; justify-content: center; }
-.auth-form { width: 100%; max-width: 380px; margin: 0 auto; display: grid; gap: 16px; }
+.auth-right { padding: 56px 64px; display: flex; flex-direction: column; justify-content: center; }
+.auth-form { width: 100%; max-width: 400px; margin: 0 auto; display: grid; gap: 16px; }
 .with-icon { position: relative; }
 .with-icon > svg { position: absolute; left: 12px; top: 11px; color: var(--ink-2); pointer-events: none; }
 .with-icon .input { padding-left: 38px; }
