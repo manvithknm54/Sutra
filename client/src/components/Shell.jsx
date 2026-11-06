@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   LogOut,
   SlidersHorizontal,
+  SquarePen,
   UserCheck,
 } from "lucide-react";
 import { useAuth } from "../auth.jsx";
@@ -17,6 +18,7 @@ import { initSync } from "../lib/offline.js";
 
 const ADMIN_NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/marks", label: "Marks", icon: SquarePen },
   { to: "/students", label: "Students", icon: GraduationCap },
   { to: "/masters", label: "Masters", icon: SlidersHorizontal },
 ];
@@ -24,6 +26,7 @@ const ADMIN_NAV = [
 const FACULTY_NAV = [
   { to: "/", label: "My Classes", icon: CalendarDays, end: true },
   { to: "/attendance", label: "Attendance", icon: UserCheck },
+  { to: "/marks", label: "Marks", icon: SquarePen },
   { to: "/students", label: "Students", icon: GraduationCap },
 ];
 
