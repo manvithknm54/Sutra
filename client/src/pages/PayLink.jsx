@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { CheckCircle2, ShieldCheck, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
 import { api } from "../api";
 import { rupees } from "../utils.js";
 import Logo from "../components/Logo.jsx";
@@ -26,7 +26,6 @@ export default function PayLink() {
     <div className="pay-wrap">
       <div className="pay-card">
         <div className="brand-row" style={{ marginBottom: 16 }}><Logo size={32} /><div><b>Sutra</b><span className="label">Fee payment</span></div></div>
-        <div className="testbanner"><ShieldCheck size={15} /> Test mode. No real money is charged.</div>
         {s.loading ? <p className="muted">Loading…</p>
           : s.error ? <div className="pay-state"><XCircle size={30} style={{ color: "var(--risk)" }} /><h2>Link not found</h2><p className="muted">{s.error.message}</p></div>
           : d.status === "PAID" ? <div className="pay-state"><CheckCircle2 size={34} style={{ color: "var(--teal)" }} /><h2>Payment received</h2>
@@ -42,7 +41,8 @@ export default function PayLink() {
               </dl>
               <div className="r-amount"><span className="label">Amount to pay</span><b className="tnum">{rupees(d.amountPaise)}</b></div>
               {err && <p className="helper-err" role="alert">{err}</p>}
-              <button className="btn" style={{ width: "100%", height: 46 }} disabled={busy} onClick={pay}>{busy ? "Processing…" : `Pay ${rupees(d.amountPaise)} (test)`}</button>
+              <button className="btn" style={{ width: "100%", height: 46 }} disabled={busy} onClick={pay}>{busy ? "Processing…" : `Pay ${rupees(d.amountPaise)}`}</button>
+              <p className="muted" style={{ fontSize: 12, textAlign: "center" }}>Questions? Contact the college accounts office.</p>
             </>
           )}
       </div>

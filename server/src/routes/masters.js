@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../db.js";
 import { requireRole } from "../middleware/auth.js";
+import { ensureComponents } from "../lib/markData.js";
 
 const router = Router();
 const isUnique = (e) => e?.code === "P2002";
@@ -106,7 +107,11 @@ router.post("/allocations", requireRole("ADMIN"), async (req, res) => {
   if (!subject || !batch || !faculty) return res.status(404).json({ error: "Subject, batch or faculty not found" });
   if (subject.programmeId !== batch.programmeId) return bad(res, "That batch belongs to a different programme");
   try {
-    const item = await prisma.courseAllocation.create({ data: p.data });
+    const item = await prisma.$transaction(async (tx) => {
+      const created = await tx.courseAllocation.create({ data: p.data });
+      await ensureComponents([created.id], tx);
+      return created;
+    });
     res.status(201).json({ item });
   } catch (e) {
     if (isUnique(e)) return res.status(409).json({ error: "This subject is already allocated to that batch" });

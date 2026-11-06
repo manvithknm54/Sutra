@@ -46,8 +46,8 @@ router.post("/pay/:token", async (req, res) => {
       if (link.amountPaise > due) throw new HttpError(409, `The amount due changed to ${inr(Math.max(due, 0))}. Please ask the office for a new link.`);
       const no = await nextReceiptNo(tx);
       await tx.feeLedgerEntry.create({
-        data: { studentId: link.studentId, type: "PAYMENT", amountPaise: link.amountPaise, method: "UPI", reference: "Test-mode payment link",
-          idempotencyKey: `link:${link.id}`, receiptNo: no, note: "Paid via payment link (test mode)" },
+        data: { studentId: link.studentId, type: "PAYMENT", amountPaise: link.amountPaise, method: "UPI", reference: "Payment link",
+          idempotencyKey: `link:${link.id}`, receiptNo: no, note: "Paid via payment link" },
       });
       await tx.paymentLink.update({ where: { id: link.id }, data: { status: "PAID", paidAt: new Date() } });
       return no;

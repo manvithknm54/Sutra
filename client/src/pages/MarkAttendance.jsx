@@ -37,7 +37,7 @@ const Dots = ({ v }) => (
   </span>
 );
 
-export default function MarkAttendance() {
+function MarkAttendanceView() {
   const { allocationId } = useParams();
   const sync = useSync();
   const [load, setLoad] = useState({ loading: true });
@@ -233,4 +233,9 @@ export default function MarkAttendance() {
       </div>
     </div>
   );
+}
+
+export default function MarkAttendance() {
+  const { allocationId } = useParams();
+  return <MarkAttendanceView key={allocationId} />;
 }

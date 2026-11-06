@@ -2,8 +2,8 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { AlertCircle, ArrowLeft, CheckCheck, Download, History, KeyRound, Lock, Pencil, Search, Send, SlidersHorizontal, Undo2 } from "lucide-react";
 import { api } from "../api";
-import { useApi } from "../hooks.js";
-import { Empty, ErrorState, Kpi, Modal, PageHeader, Panel, Skeleton, Stepper, StatusBadge } from "../components/ui.jsx";
+import { useApi, useFlash } from "../hooks.js";
+import { Empty, ErrorState, Flash, Kpi, Modal, PageHeader, Panel, Skeleton, Stepper, StatusBadge } from "../components/ui.jsx";
 
 const fmt = (n) => (n == null ? "" : Number.isInteger(n) ? String(n) : n.toFixed(1));
 const when = (iso) => new Date(iso).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
@@ -257,13 +257,13 @@ function AuditDrawer({ id, onClose }) {
   );
 }
 
-export default function MarkSheet() {
+function MarkSheetView() {
   const { allocationId: id } = useParams();
   const sheet = useApi(`/marks/${id}`, ["marks"]);
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState("all");
   const [dialog, setDialog] = useState(null);
-  const [note, setNote] = useState(null);
+  const [note, setNote, clearNote] = useFlash();
   const refs = useRef({});
   const d = sheet.data;
 
@@ -277,7 +277,7 @@ export default function MarkSheet() {
 
   async function run(action, reason) {
     await api(`/marks/${id}/action`, { method: "POST", body: { action, reason } });
-    setNote({ ok: true, text: DONE[action] });
+    setNote(DONE[action]);
     sheet.reload();
   }
   async function exportCsv() {
@@ -290,8 +290,8 @@ export default function MarkSheet() {
       const a = document.createElement("a");
       a.href = url; a.download = name; a.click();
       URL.revokeObjectURL(url);
-      setNote({ ok: true, text: "CSV downloaded. This export is recorded in the audit log." });
-    } catch (e) { setNote({ ok: false, text: e.message }); }
+      setNote("CSV downloaded. This export is recorded in the audit log.");
+    } catch (e) { setNote(e.message); }
   }
   async function saveCell(studentId, componentId, marks) {
     await api(`/marks/${id}/entries`, { method: "PUT", body: { entries: [{ studentId, componentId, marks }] } });
@@ -370,7 +370,7 @@ export default function MarkSheet() {
         }
       />
 
-      {note && <div className={`notice ${note.ok ? "" : "err"}`} role="status">{note.text}</div>}
+      <Flash note={note} onClose={clearNote} />
       <Stepper status={status} />
       {status === "LOCKED" && (
         <div className="lockbar"><Lock size={15} />
@@ -390,7 +390,7 @@ export default function MarkSheet() {
         <div className="search"><Search size={16} />
           <input className="input" placeholder="Find by name or roll number" aria-label="Find student" value={q} onChange={(e) => setQ(e.target.value)} /></div>
         <div className="seg" style={{ margin: 0 }} role="tablist">
-          {[["all", `All (${d.rows.length})`], ["moderated", `Moderated (${stats.moderatedCount})`], ["missing", `Missing (${d.rows.filter((r) => r.missing).length})`]].map(([k, l]) => (
+          { [["all", `All (${d.rows.length})`], ["moderated", `Moderated (${stats.moderatedCount})`], ["missing", `Missing (${d.rows.filter((r) => r.missing).length})`]].map(([k, l]) => (
             <button key={k} role="tab" aria-selected={filter === k} className={filter === k ? "on" : ""} onClick={() => setFilter(k)}>{l}</button>
           ))}
         </div>
@@ -436,8 +436,13 @@ export default function MarkSheet() {
 
       {dialog?.type === "action" && <ActionDialog {...dialog} onClose={() => setDialog(null)} onConfirm={(reason) => run(dialog.action, reason)} />}
       {dialog?.type === "moderate" && <ModerateDialog sheet={d} id={id} onClose={() => setDialog(null)}
-        onDone={(text) => { setDialog(null); setNote({ ok: true, text }); sheet.reload(); }} />}
+        onDone={(text) => { setDialog(null); setNote(text); sheet.reload(); }} />}
       {dialog?.type === "audit" && <AuditDrawer id={id} onClose={() => setDialog(null)} />}
     </div>
   );
+}
+
+export default function MarkSheet() {
+  const { allocationId } = useParams();
+  return <MarkSheetView key={allocationId} />;
 }

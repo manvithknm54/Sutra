@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "../db.js";
 import { requireRole } from "../middleware/auth.js";
 import { ACTIONS, can, csvCell, deriveUnlock, effectiveDelta, parseMark, transition } from "../lib/marks.js";
+import { ensureCampusComponents, ensureComponents } from "../lib/markData.js";
 
 const router = Router();
 const UNLOCK_ACTIONS = ["LOCK", "UNLOCK_REQUEST", "UNLOCK_APPROVE", "UNLOCK_REJECT"];
@@ -12,8 +13,8 @@ class HttpError extends Error { constructor(status, msg) { super(msg); this.stat
 const fail = (res, e) => { if (e instanceof HttpError) return res.status(e.status).json({ error: e.message }); throw e; };
 
 // Campus-scoped. Faculty can only reach their own allocations.
-const loadAlloc = (user, id) =>
-  prisma.courseAllocation.findFirst({
+const loadAlloc = async (user, id) => {
+  const find = () => prisma.courseAllocation.findFirst({
     where: { id, subject: { programme: { campusId: user.campusId } }, ...(user.role === "FACULTY" ? { facultyId: user.id } : {}) },
     include: {
       subject: { select: { code: true, name: true, semester: true } },
@@ -22,6 +23,10 @@ const loadAlloc = (user, id) =>
       components: { orderBy: [{ position: "asc" }, { id: "asc" }] },
     },
   });
+  let a = await find();
+  if (a && !a.components.length) { await ensureComponents([a.id]); a = await find(); }
+  return a;
+};
 
 const rosterOf = (a, campusId) =>
   prisma.student.findMany({ where: { batchId: a.batch.id, campusId }, orderBy: { rollNo: "asc" }, select: { id: true, rollNo: true, name: true } });
@@ -29,6 +34,7 @@ const rosterOf = (a, campusId) =>
 // ---------- list ----------
 router.get("/", async (req, res) => {
   const { user } = req;
+  await ensureCampusComponents(user.campusId);
   const allocs = await prisma.courseAllocation.findMany({
     where: { subject: { programme: { campusId: user.campusId } }, ...(user.role === "FACULTY" ? { facultyId: user.id } : {}) },
     orderBy: [{ batch: { startYear: "desc" } }, { subject: { code: "asc" } }],

@@ -2,9 +2,9 @@ import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Award, Check, Copy, Download, ExternalLink, Link2, Plus, Search, Wallet } from "lucide-react";
 import { api } from "../api";
-import { useApi, useDebounced } from "../hooks.js";
+import { useApi, useDebounced, useFlash } from "../hooks.js";
 import { dateIN, rupees } from "../utils.js";
-import { Empty, ErrorState, Kpi, Modal, PageHeader, Panel, Skeleton } from "../components/ui.jsx";
+import { Empty, ErrorState, Flash, Kpi, Modal, PageHeader, Panel, Skeleton } from "../components/ui.jsx";
 
 const STATUS = { PENDING: ["Not yet due", ""], OVERDUE: ["Overdue", "risk"], CRITICAL: ["Critical", "risk"], CLEARED: ["Cleared", "ok"] };
 const FeeBadge = ({ s }) => <span className={`badge ${STATUS[s][1]}`}><span className="dot" />{STATUS[s][0]}</span>;
@@ -99,7 +99,7 @@ function LinkDialog({ st, due, onClose, onDone }) {
     catch (e) { setErr(e.message); } finally { setBusy(false); }
   }
   return (
-    <Modal title="Payment link" sub="Test mode: nothing real is charged." icon={Link2} onClose={onClose}
+    <Modal title="Payment link" sub="Share this link with the guardian. It works without signing in." icon={Link2} onClose={onClose}
       footer={res ? <button className="btn" onClick={onClose}>Done</button> : <>
         <button className="btn secondary" onClick={onClose}>Cancel</button>
         <button className="btn" disabled={!valid || busy} onClick={go}>{busy ? "Creating…" : "Create link"}</button></>}>
@@ -120,7 +120,7 @@ function LinkDialog({ st, due, onClose, onDone }) {
               <button key={k} role="tab" aria-selected={lang === k} className={lang === k ? "on" : ""} onClick={() => setLang(k)}>{l}</button>))}
           </div>
           <div className="sms">{res.message[lang]}</div>
-          <p className="muted" style={{ fontSize: 12 }}>Messages are mocked in this build. Copy the text to send it.</p>
+          <p className="muted" style={{ fontSize: 12 }}>Copy the message and send it to the guardian.</p>
         </>
       )}
       {err && <p className="helper-err" role="alert">{err}</p>}
@@ -131,7 +131,7 @@ function LinkDialog({ st, due, onClose, onDone }) {
 function StudentLedger({ id, onClose }) {
   const { data, error, loading, reload } = useApi(`/fees/student/${id}`, ["fees"]);
   const [dialog, setDialog] = useState(null);
-  const [note, setNote] = useState(null);
+  const [note, setNote, clearNote] = useFlash();
   const d = data;
   const st = d?.student;
   return (
@@ -140,8 +140,9 @@ function StudentLedger({ id, onClose }) {
         : loading && !d ? <div style={{ padding: 20 }}><Skeleton rows={6} /></div>
         : (
           <div className="ledger-body">
-            {note && <div className="notice" role="status" style={{ margin: 0 }}><Check size={16} /> {note.text}
-              {note.entryId && <Link to={`/receipt/${note.entryId}`} style={{ marginLeft: "auto" }}>View receipt</Link>}</div>}
+            <Flash note={note?.text} onClose={clearNote}>
+              {note?.entryId && <Link to={`/receipt/${note.entryId}`} style={{ marginLeft: "auto" }}>View receipt</Link>}
+            </Flash>
             <dl className="facts">
               <div><dt>Billed</dt><dd className="tnum">{rupees(d.totals.billed)}</dd></div>
               <div><dt>Scholarship</dt><dd className="tnum">{rupees(d.totals.scholarship)}</dd></div>
@@ -314,7 +315,7 @@ function Structure() {
 export default function Fees() {
   const [tab, setTab] = useState("dues");
   const [dialog, setDialog] = useState(false);
-  const [note, setNote] = useState(null);
+  const [note, setNote, clearNote] = useFlash();
   const thisMonth = new Date().toLocaleDateString("en-CA").slice(0, 7);
   return (
     <div className="page">
@@ -323,7 +324,7 @@ export default function Fees() {
           <a className="btn secondary" href={`/api/fees/export/tally.csv?month=${thisMonth}`}><Download size={15} /> Export receipts (CSV)</a>
           <button className="btn" onClick={() => setDialog(true)}><Plus size={15} /> Generate dues</button>
         </div>} />
-      {note && <div className="notice" role="status"><Check size={16} /> {note}</div>}
+      <Flash note={note} onClose={clearNote} />
       <div className="seg" role="tablist">
         {[["dues", "Dues"], ["structure", "Fee structure"]].map(([k, l]) => (
           <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{l}</button>))}

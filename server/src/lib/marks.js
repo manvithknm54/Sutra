@@ -54,3 +54,6 @@ export function deriveUnlock(rows) {
   }
   return s;
 }
+
+// Every sheet starts with the same structure so it is never empty: four components of 10 = 40 marks.
+export const DEFAULT_COMPONENTS = [["Test 1", 10], ["Test 2", 10], ["Assignment", 10], ["Lab", 10]];

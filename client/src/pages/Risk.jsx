@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Check, CheckCheck, RefreshCw, Search, ShieldAlert, X } from "lucide-react";
+import { CheckCheck, RefreshCw, Search, ShieldAlert, X } from "lucide-react";
 import { api } from "../api";
 import { useAuth } from "../auth.jsx";
-import { useApi } from "../hooks.js";
+import { useApi, useFlash } from "../hooks.js";
 import { timeIN } from "../utils.js";
-import { Empty, ErrorState, Kpi, Modal, PageHeader, Panel, Skeleton } from "../components/ui.jsx";
+import { Empty, ErrorState, Flash, Kpi, Modal, PageHeader, Panel, Skeleton } from "../components/ui.jsx";
 import { ReasonDialog } from "../components/dialogs.jsx";
 
 const LEVEL = { HIGH: ["High", "risk"], MEDIUM: ["Medium", ""] };
@@ -56,7 +56,7 @@ export default function Risk() {
   const [level, setLevel] = useState("all");
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(null);
-  const [note, setNote] = useState(null);
+  const [note, setNote, clearNote] = useFlash();
   const [scanning, setScanning] = useState(false);
   const { data, error, loading, reload } = useApi(`/risk?status=${status}`, ["risk"]);
 
@@ -80,7 +80,7 @@ export default function Risk() {
         action={admin && <button className="btn secondary" onClick={runScan} disabled={scanning}><RefreshCw size={15} /> {scanning ? "Scanning…" : "Run scan now"}</button>} />
       <div className="callout" style={{ marginBottom: 16 }}><ShieldAlert size={16} />
         <span>Flags only create a mentor task. They never change attendance, marks or fees. Every flag shows exactly why it was raised.</span></div>
-      {note && <div className="notice" role="status"><Check size={16} /> {note}</div>}
+      <Flash note={note} onClose={clearNote} />
       {c && (
         <div className="kpis">
           <Kpi label="Open flags" value={c.open} /><Kpi label="High risk" value={c.high} tone={c.high ? "risk" : undefined} />

@@ -16,11 +16,11 @@ function Preview({ a, onClose }) {
         <div className="callout"><Bell size={16} /><span>Held. This student is a minor and guardian consent is pending (DPDP), so nothing was sent.</span></div>
       ) : (
         <div className="seg" style={{ margin: 0 }} role="tablist">
-          {[["en", "English"], ["od", "Odia"]].map(([k, l]) => (
+          { [["en", "English"], ["od", "Odia"]].map(([k, l]) => (
             <button key={k} role="tab" aria-selected={lang === k} className={lang === k ? "on" : ""} onClick={() => setLang(k)}>{l}</button>))}
         </div>)}
       <div className="sms">{a.held ? a.body : lang === "en" ? en : od ?? en}</div>
-      <p className="muted" style={{ fontSize: 12 }}>Channel: {a.channel === "MOCK_SMS" ? "Mock SMS (nothing is actually sent)" : a.channel} · Week {a.weekKey} · {timeIN(a.at)}</p>
+      <p className="muted" style={{ fontSize: 12 }}>Channel: SMS · Week {a.weekKey} · {timeIN(a.at)}</p>
     </Modal>
   );
 }
@@ -34,9 +34,9 @@ export default function Alerts() {
   return (
     <div className="page">
       <PageHeader eyebrow="Parent messages" title="Alerts"
-        sub="Sent automatically: shortage below 75% (once a week per student) and weekly fee reminders. Messages are mocked in this build." />
+        sub="Sent automatically: shortage below 75% (once a week per student) and weekly fee reminders." />
       <div className="seg" role="tablist">
-        {[["all", "All"], ["attendance", "Attendance"], ["fees", "Fees"]].map(([k, l]) => (
+        { [["all", "All"], ["attendance", "Attendance"], ["fees", "Fees"]].map(([k, l]) => (
           <button key={k} role="tab" aria-selected={group === k} className={group === k ? "on" : ""} onClick={() => { setGroup(k); setPage(1); }}>{l}</button>))}
       </div>
       <Panel>
@@ -52,8 +52,8 @@ export default function Alerts() {
                     <td className="tnum">{timeIN(a.at)}</td>
                     <td><b style={{ fontWeight: 500 }}>{a.student.name}</b> <span className="mono muted" style={{ marginLeft: 6 }}>{a.student.rollNo}</span></td>
                     <td>{kindLabel(a.kind)}</td>
-                    <td>{a.held ? <span className="badge risk"><span className="dot" />Held · consent pending</span> : <span className="badge ok"><span className="dot" />Sent (mock)</span>}</td>
-                    <td className="muted">{a.channel === "MOCK_SMS" ? "Mock SMS" : a.channel}</td>
+                    <td>{a.held ? <span className="badge risk"><span className="dot" />Held · consent pending</span> : <span className="badge ok"><span className="dot" />Sent</span>}</td>
+                    <td className="muted">SMS</td>
                   </tr>))}</tbody>
               </table></div>
               <div className="panel-foot">

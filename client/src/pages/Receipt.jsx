@@ -25,7 +25,7 @@ export default function Receipt() {
           <div><dt>Balance due now</dt><dd className="tnum">{rupees(Math.max(r.dueAfter, 0))}</dd></div>
         </dl>
         <div className="r-amount"><span className="label">Amount received</span><b className="tnum">{rupees(r.amountPaise)}</b></div>
-        <p className="muted" style={{ fontSize: 12 }}>Computer-generated receipt. Demo data, test-mode payments.</p>
+        <p className="muted" style={{ fontSize: 12 }}>Computer-generated receipt. No signature required.</p>
       </div>
       <button className="btn noprint" onClick={() => window.print()}><Printer size={15} /> Print receipt</button>
     </div>

@@ -81,3 +81,16 @@ export function useDebounced(value, ms = 300) {
   }, [value, ms]);
   return v;
 }
+
+// A message that clears itself after 10 seconds. Returns [value, show, clear].
+export function useFlash(ms = 10000) {
+  const [state, setState] = useState(null);
+  useEffect(() => {
+    if (!state) return;
+    const t = setTimeout(() => setState(null), ms);
+    return () => clearTimeout(t);
+  }, [state, ms]);
+  const show = useCallback((v) => setState({ v, k: Math.random() }), []); // new object, so the timer restarts
+  const clear = useCallback(() => setState(null), []);
+  return [state?.v ?? null, show, clear];
+}

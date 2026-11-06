@@ -122,3 +122,17 @@ export function Modal({ title, sub, icon: Icon, tone, onClose, children, footer,
     document.body
   );
 }
+
+export function Flash({ note, onClose, children }) {
+  if (!note) return null;
+  const text = typeof note === "string" ? note : note.text;
+  const bad = typeof note === "object" && note.ok === false;
+  return (
+    <div className={`notice flash ${bad ? "err" : ""}`} role="status">
+      {bad ? <AlertCircle size={16} /> : <Check size={16} />}
+      <span style={{ flex: 1 }}>{text}</span>
+      {children}
+      <button className="icon-btn" aria-label="Dismiss" onClick={onClose}><X size={15} /></button>
+    </div>
+  );
+}

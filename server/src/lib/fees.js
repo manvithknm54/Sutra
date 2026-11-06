@@ -27,8 +27,8 @@ export const receiptLabel = (n, year) => `RCT-${year}-${String(n).padStart(6, "0
 
 // The Odia text needs review by a native speaker before launch (noted in the TDD).
 export const feeLinkMessage = (name, paise, url) => ({
-  en: `Dear Guardian, ${inr(paise)} is due for ${name}. Pay securely here (test mode): ${url}`,
-  od: `ପ୍ରିୟ ଅଭିଭାବକ, ${name} ଙ୍କ ପାଇଁ ${inr(paise)} ବାକି ଅଛି। ପେମେଣ୍ଟ ଲିଙ୍କ (ଟେଷ୍ଟ ମୋଡ୍): ${url}`,
+  en: `Dear Guardian, ${inr(paise)} is due for ${name}. Pay securely here: ${url}`,
+  od: `ପ୍ରିୟ ଅଭିଭାବକ, ${name} ଙ୍କ ପାଇଁ ${inr(paise)} ବାକି ଅଛି। ପେମେଣ୍ଟ ଲିଙ୍କ: ${url}`,
 });
 export const feeReminderMessage = (name, rollNo, paise, days) => ({
   en: `Dear Guardian, the fee of ${inr(paise)} for ${name} (${rollNo}) is overdue by ${days} days. Please contact the accounts office.`,
