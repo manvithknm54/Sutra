@@ -271,16 +271,31 @@ router.post("/:id/action", async (req, res) => {
 router.get("/:id/audit", async (req, res) => {
   const a = await loadAlloc(req.user, req.params.id);
   if (!a) return res.status(404).json({ error: "Mark sheet not found" });
-  const rows = await prisma.markAudit.findMany({ where: { allocationId: a.id }, orderBy: [{ at: "desc" }, { id: "desc" }], take: 300 });
+  const rows = await prisma.markAudit.findMany({ where: { allocationId: a.id }, orderBy: [{ at: "desc" }, { id: "desc" }], take: 1000 });
+
+  // A moderation applied to a whole class is stored as one row per student. Show it as one entry.
+  const merged = [];
+  for (const r of rows) {
+    const p = merged[merged.length - 1];
+    if (r.action === "MODERATE" && p?.action === "MODERATE" && p.actorId === r.actorId && p.component === r.component &&
+        p.reason === r.reason && p.oldValue === r.oldValue && p.newValue === r.newValue && Math.abs(p.at - r.at) < 60000) {
+      p.count++;
+      continue;
+    }
+    merged.push({ ...r, count: 1 });
+  }
+
   const [actors, students] = await Promise.all([
-    prisma.user.findMany({ where: { id: { in: [...new Set(rows.map((r) => r.actorId))] } }, select: { id: true, name: true, role: true } }),
-    prisma.student.findMany({ where: { id: { in: [...new Set(rows.map((r) => r.studentId).filter(Boolean))] } }, select: { id: true, name: true, rollNo: true } }),
+    prisma.user.findMany({ where: { id: { in: [...new Set(merged.map((r) => r.actorId))] } }, select: { id: true, name: true, role: true } }),
+    prisma.student.findMany({ where: { id: { in: [...new Set(merged.map((r) => r.studentId).filter(Boolean))] } }, select: { id: true, name: true, rollNo: true } }),
   ]);
   const A = new Map(actors.map((x) => [x.id, x])), S = new Map(students.map((x) => [x.id, x]));
   res.json({
-    items: rows.map((r) => ({
-      id: r.id, at: r.at, action: r.action, component: r.component, oldValue: r.oldValue, newValue: r.newValue, reason: r.reason,
-      actor: A.get(r.actorId) ?? { name: "Unknown", role: "" }, student: r.studentId ? S.get(r.studentId) ?? null : null,
+    items: merged.map((r) => ({
+      id: r.id, at: r.at, action: r.action, component: r.component, oldValue: r.oldValue, newValue: r.newValue,
+      reason: r.reason, count: r.count,
+      actor: A.get(r.actorId) ?? { name: "Unknown", role: "" },
+      student: r.count === 1 && r.studentId ? S.get(r.studentId) ?? null : null,
     })),
   });
 });
