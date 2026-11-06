@@ -27,7 +27,7 @@ function useForm(initial, onSubmit) {
 const Count = ({ n, label }) => <span className="muted" style={{ fontSize: 12 }}>{n} {label}</span>;
 
 function ProgrammesTab() {
-  const res = useApi("/masters/programmes");
+  const res = useApi("/masters/programmes", ["masters"]);
   return (
     <Panel title="Programmes" meta={res.data && <Count n={res.data.items.length} label="programmes" />}>
       <Async res={res} emptyTitle="No programmes">
@@ -49,8 +49,8 @@ function ProgrammesTab() {
 }
 
 function SubjectsTab() {
-  const subjects = useApi("/masters/subjects");
-  const programmes = useApi("/masters/programmes");
+  const subjects = useApi("/masters/subjects", ["masters"]);
+  const programmes = useApi("/masters/programmes", ["masters"]);
   const f = useForm({ programmeId: "", code: "", name: "", semester: "" }, async (form) => {
     await api("/masters/subjects", { method: "POST", body: { ...form, semester: Number(form.semester) } });
     subjects.reload();
@@ -90,10 +90,10 @@ function SubjectsTab() {
 }
 
 function AllocationsTab() {
-  const allocs = useApi("/masters/allocations");
-  const subjects = useApi("/masters/subjects");
-  const programmes = useApi("/masters/programmes");
-  const faculty = useApi("/masters/faculty");
+  const allocs = useApi("/masters/allocations", ["masters"]);
+  const subjects = useApi("/masters/subjects", ["masters"]);
+  const programmes = useApi("/masters/programmes", ["masters"]);
+  const faculty = useApi("/masters/faculty", ["masters"]);
   const f = useForm({ subjectId: "", batchId: "", facultyId: "" }, async (form) => {
     await api("/masters/allocations", { method: "POST", body: form });
     allocs.reload();
@@ -149,7 +149,7 @@ function AllocationsTab() {
 }
 
 function FacultyTab() {
-  const res = useApi("/masters/faculty");
+  const res = useApi("/masters/faculty", ["masters"]);
   return (
     <Panel title="Faculty" meta={res.data && <Count n={res.data.items.length} label="faculty" />}>
       <Async res={res} emptyTitle="No faculty">

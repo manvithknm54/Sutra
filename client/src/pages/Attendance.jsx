@@ -12,7 +12,7 @@ const STATE = {
 };
 
 export default function Attendance() {
-  const classes = useOfflineApi("/masters/allocations", "allocations");
+  const classes = useOfflineApi("/masters/allocations", "allocations", ["masters"]);
   const sync = useSync();
   const [queue, setQueue] = useState([]);
   useEffect(() => { listQueue().then((q) => setQueue(q.sort((a, b) => b.createdAt - a.createdAt))); },

@@ -7,7 +7,7 @@ import { Empty, ErrorState, Kpi, PageHeader, Panel, Skeleton, StatusBadge } from
 export default function Marks() {
   const { user } = useAuth();
   const admin = user.role === "ADMIN";
-  const { data, error, loading, reload } = useApi("/marks");
+  const { data, error, loading, reload } = useApi("/marks", ["marks", "masters"]);
   const count = (s) => data?.items.filter((i) => i.status === s).length ?? 0;
 
   return (

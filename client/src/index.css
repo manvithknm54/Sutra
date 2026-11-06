@@ -404,3 +404,64 @@ textarea.input { height: auto; min-height: 84px; padding: 10px 12px; resize: ver
 .tl-reason { margin-top: 8px; padding: 8px 12px; font-size: 13px; line-height: 19px; background: var(--surface-low);
   border-left: 2px solid var(--line-2); border-radius: 0 8px 8px 0; }
 .tl-by { margin-top: 6px; font-size: 12px; color: var(--ink-2); }
+/* ---------- Fees, risk, dashboards ---------- */
+tbody tr.click { cursor: pointer; }
+tbody tr.click:focus-visible { outline: 2px solid var(--teal); outline-offset: -2px; }
+.redtxt { color: var(--risk); font-weight: 600; }
+.teal { color: var(--teal-ink); }
+.kpi.link { display: block; color: inherit; text-decoration: none; transition: border-color .12s, transform .12s; }
+.kpi.link:hover { border-color: var(--line-2); transform: translateY(-1px); }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; }
+
+.ledger-body { padding: 20px; display: grid; gap: 14px; align-content: start; }
+.facts .due { background: var(--risk-tint); }
+.facts .due dd { color: var(--risk); }
+.linkcard { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px;
+  background: var(--teal-tint); border-radius: 10px; font-size: 13px; }
+.linkcard b { display: block; } .linkcard span { font-size: 12px; }
+.lg { list-style: none; margin: 0; padding: 0; }
+.lg li { padding: 12px 0; border-bottom: 1px solid var(--line); display: grid; gap: 4px; }
+.lg li:last-child { border-bottom: 0; }
+.lg-top { display: flex; align-items: center; justify-content: space-between; }
+.lg-sub { font-size: 12.5px; }
+.sms { padding: 12px 14px; font-size: 13.5px; line-height: 21px; background: var(--surface-low); border: 1px solid var(--line); border-radius: 10px; }
+
+.srows { display: grid; gap: 14px; }
+.srow { display: grid; grid-template-columns: 64px 1fr minmax(150px, 1.2fr); align-items: center; gap: 12px; font-size: 13px; }
+.stack { height: 10px; border-radius: 5px; overflow: hidden; background: var(--risk-tint); margin-bottom: 14px; }
+.stack i { display: block; height: 100%; background: var(--teal); }
+.frow { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+.frow:last-child { border-bottom: 0; }
+
+.risk-score { display: flex; align-items: baseline; gap: 12px; }
+.risk-score b { font-size: 34px; letter-spacing: -0.03em; } .risk-score small { font-size: 14px; color: var(--ink-2); font-weight: 500; }
+.why { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.why li { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; line-height: 20px; }
+.why .pts { flex: none; min-width: 34px; text-align: center; padding: 0 6px; font-size: 12px; font-weight: 600;
+  color: var(--risk); background: var(--risk-tint); border-radius: 6px; }
+
+.pay-wrap { min-height: 100dvh; display: grid; place-items: center; padding: 20px; background: var(--canvas); }
+.pay-card { width: 100%; max-width: 420px; padding: 28px; display: grid; gap: 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 24px 56px -28px rgb(16 24 40 / .25); }
+.testbanner { display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 12.5px; background: var(--chip); border: 1px solid var(--line); border-radius: 8px; }
+.pay-state { text-align: center; padding: 12px 0; display: grid; gap: 6px; justify-items: center; }
+
+.receipt { max-width: 640px; margin-bottom: 16px; padding: 28px; display: grid; gap: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.r-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+.r-no { text-align: right; display: grid; gap: 2px; }
+.r-grid { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 14px 24px; }
+.r-grid dt { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); }
+.r-grid dd { margin: 2px 0 0; font-size: 14px; font-weight: 500; }
+.r-amount { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--teal-tint); border-radius: 10px; }
+.r-amount b { font-size: 24px; letter-spacing: -0.02em; color: var(--teal-ink); }
+
+@media print {
+  .sidebar, .topbar, .tabbar, .noprint, .overlay { display: none !important; }
+  .content { padding: 0 !important; } .main { padding: 0 !important; max-width: none; }
+  body { background: #fff; } .receipt { border: 1px solid #ccc; box-shadow: none; }
+}
+@media (max-width: 900px) {
+  .tabbar { overflow-x: auto; grid-auto-columns: minmax(72px, 1fr); }
+  .srow { grid-template-columns: 56px 1fr; } .srow .gauge { grid-column: 1 / -1; }
+  .r-grid { grid-template-columns: 1fr; }
+}

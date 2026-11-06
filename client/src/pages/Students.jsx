@@ -9,7 +9,7 @@ export default function Students() {
   const inputRef = useRef(null);
   const q = useDebounced(search.trim(), 300);
   const path = `/students?page=${page}&pageSize=25${q ? `&search=${encodeURIComponent(q)}` : ""}`;
-  const { data, error, loading, reload } = useApi(path);
+  const { data, error, loading, reload } = useApi(path, ["masters"]);
   const pages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
 
   useEffect(() => {

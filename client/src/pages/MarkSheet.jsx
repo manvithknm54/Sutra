@@ -31,13 +31,12 @@ function MarkCell({ cell, max, label, editable, onSave, inputRef, onEnter }) {
   const [saving, setSaving] = useState(false);
   useEffect(() => { setText(server == null ? "" : String(server)); setSaveErr(""); }, [server]);
 
-  // Validated live from the text, so the message can never get stuck.
   const { value, error: liveErr } = validateMark(text, max);
   const err = liveErr || saveErr;
 
   async function commit() {
-    if (liveErr) return false;                              // keep the message until it's fixed
-    if (value === server) { setSaveErr(""); return true; }  // nothing changed, nothing to save
+    if (liveErr) return false;
+    if (value === server) { setSaveErr(""); return true; }
     setSaving(true);
     try { await onSave(value); setSaveErr(""); return true; }
     catch (e) { setSaveErr(e.message); return false; }
@@ -60,7 +59,7 @@ function MarkCell({ cell, max, label, editable, onSave, inputRef, onEnter }) {
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
-            commit().then((ok) => ok && onEnter?.()); // only move down when the value is valid
+            commit().then((ok) => ok && onEnter?.());
           }
         }} />
       {err && <span className="merr" role="alert">{err}</span>}
@@ -154,7 +153,7 @@ const KIND = {
   UNLOCK_REJECT: { icon: KeyRound, tone: "risk" },
   EXPORT: { icon: Download, tone: "" },
 };
-const GROUP = { MARK_SET: "marks", MODERATE: "mod", COMPLETE_MODERATION: "mod" }; // everything else is "flow"
+const GROUP = { MARK_SET: "marks", MODERATE: "mod", COMPLETE_MODERATION: "mod" };
 const groupOf = (it) => GROUP[it.action] ?? "flow";
 const signed = (v) => { const n = Number(v); return `${n > 0 ? "+" : ""}${n}`; };
 const dayKey = (d) => new Date(d).toLocaleDateString("en-CA");
@@ -166,7 +165,6 @@ const dayLabel = (iso) => {
 };
 const timeOf = (iso) => new Date(iso).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
 
-// Turns a raw audit row into words people can read.
 function describe(it) {
   const who = it.count > 1 ? `${it.count} students` : it.student ? `${it.student.rollNo} · ${it.student.name}` : null;
   switch (it.action) {
@@ -197,7 +195,7 @@ const Change = ({ from, to }) =>
   : <span className="chg">{from} <i>→</i> {to}</span>;
 
 function AuditDrawer({ id, onClose }) {
-  const { data, error, loading, reload } = useApi(`/marks/${id}/audit`);
+  const { data, error, loading, reload } = useApi(`/marks/${id}/audit`, ["marks"]);
   const [tab, setTab] = useState("all");
   const items = data?.items ?? [];
   const shown = items.filter((it) => tab === "all" || groupOf(it) === tab);
@@ -261,7 +259,7 @@ function AuditDrawer({ id, onClose }) {
 
 export default function MarkSheet() {
   const { allocationId: id } = useParams();
-  const sheet = useApi(`/marks/${id}`);
+  const sheet = useApi(`/marks/${id}`, ["marks"]);
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState("all");
   const [dialog, setDialog] = useState(null);
