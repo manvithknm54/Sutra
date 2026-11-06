@@ -18,25 +18,34 @@ const DONE = {
   UNLOCK_APPROVE: "Unlock approved. The sheet is back in Draft.", UNLOCK_REJECT: "Unlock request rejected.",
 };
 
+function validateMark(text, max) {
+  const s = text.trim();
+  if (s === "") return { value: null, error: "" };
+  const v = Number(s);
+  if (!Number.isFinite(v)) return { value: null, error: "Numbers only" };
+  if (v < 0 || v > max) return { value: null, error: `0 to ${max}` };
+  if (Math.round(v * 2) !== v * 2) return { value: null, error: "Steps of 0.5" };
+  return { value: v, error: "" };
+}
+
 function MarkCell({ cell, max, label, editable, onSave, inputRef, onEnter }) {
   const server = cell?.raw ?? null;
   const [text, setText] = useState(server == null ? "" : String(server));
-  const [err, setErr] = useState("");
+  const [saveErr, setSaveErr] = useState("");
   const [saving, setSaving] = useState(false);
-  useEffect(() => { setText(server == null ? "" : String(server)); setErr(""); }, [server]);
+  useEffect(() => { setText(server == null ? "" : String(server)); setSaveErr(""); }, [server]);
+
+  // Validated live from the text, so the message can never get stuck.
+  const { value, error: liveErr } = validateMark(text, max);
+  const err = liveErr || saveErr;
 
   async function commit() {
-    const t = text.trim();
-    if (t === (server == null ? "" : String(server))) return;
-    let v = null;
-    if (t !== "") {
-      v = Number(t);
-      if (!Number.isFinite(v)) return setErr("Numbers only");
-      if (v < 0 || v > max) return setErr(`0 to ${max}`);
-      if (Math.round(v * 2) !== v * 2) return setErr("Steps of 0.5");
-    }
-    setErr(""); setSaving(true);
-    try { await onSave(v); } catch (e) { setErr(e.message); } finally { setSaving(false); }
+    if (liveErr) return false;                              // keep the message until it's fixed
+    if (value === server) { setSaveErr(""); return true; }  // nothing changed, nothing to save
+    setSaving(true);
+    try { await onSave(value); setSaveErr(""); return true; }
+    catch (e) { setSaveErr(e.message); return false; }
+    finally { setSaving(false); }
   }
 
   if (!editable)
@@ -48,9 +57,16 @@ function MarkCell({ cell, max, label, editable, onSave, inputRef, onEnter }) {
     );
   return (
     <span className="mwrap">
-      <input ref={inputRef} className={`mcell ${err ? "err" : ""}`} inputMode="decimal" value={text} disabled={saving}
-        aria-label={label} aria-invalid={!!err} onChange={(e) => setText(e.target.value)} onBlur={commit}
-        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); commit().then(() => onEnter?.()); } }} />
+      <input ref={inputRef} className={`mcell ${err ? "err" : ""}`} inputMode="decimal" value={text} readOnly={saving}
+        aria-label={label} aria-invalid={!!err}
+        onChange={(e) => { setText(e.target.value); setSaveErr(""); }}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commit().then((ok) => ok && onEnter?.()); // only move down when the value is valid
+          }
+        }} />
       {err && <span className="merr" role="alert">{err}</span>}
     </span>
   );
