@@ -1,17 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { AlertCircle, ArrowLeft, CheckCheck, Download, History, KeyRound, Lock, Search, Send, SlidersHorizontal, Undo2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCheck, Download, History, KeyRound, Lock, Pencil, Search, Send, SlidersHorizontal, Undo2 } from "lucide-react";
 import { api } from "../api";
 import { useApi } from "../hooks.js";
 import { Empty, ErrorState, Kpi, Modal, PageHeader, Panel, Skeleton, Stepper, StatusBadge } from "../components/ui.jsx";
 
 const fmt = (n) => (n == null ? "" : Number.isInteger(n) ? String(n) : n.toFixed(1));
 const when = (iso) => new Date(iso).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
-const LABEL = {
-  MARK_SET: "Mark entered", SUBMIT: "Submitted", RETURN: "Returned to faculty", MODERATE: "Moderation",
-  COMPLETE_MODERATION: "Moderation completed", LOCK: "Locked", UNLOCK_REQUEST: "Unlock requested",
-  UNLOCK_APPROVE: "Unlock approved", UNLOCK_REJECT: "Unlock rejected", EXPORT: "Exported",
-};
+
 const DONE = {
   SUBMIT: "Submitted for moderation.", RETURN: "Returned to the faculty.", COMPLETE_MODERATION: "Moderation completed.",
   LOCK: "Marks locked. They are now read-only.", UNLOCK_REQUEST: "Unlock request sent to the office admin.",
@@ -146,28 +142,118 @@ function ModerateDialog({ sheet, id, onClose, onDone }) {
   );
 }
 
+const KIND = {
+  MARK_SET: { icon: Pencil, tone: "" },
+  MODERATE: { icon: SlidersHorizontal, tone: "mod" },
+  COMPLETE_MODERATION: { icon: CheckCheck, tone: "mod" },
+  SUBMIT: { icon: Send, tone: "flow" },
+  RETURN: { icon: Undo2, tone: "risk" },
+  LOCK: { icon: Lock, tone: "flow" },
+  UNLOCK_REQUEST: { icon: KeyRound, tone: "" },
+  UNLOCK_APPROVE: { icon: KeyRound, tone: "mod" },
+  UNLOCK_REJECT: { icon: KeyRound, tone: "risk" },
+  EXPORT: { icon: Download, tone: "" },
+};
+const GROUP = { MARK_SET: "marks", MODERATE: "mod", COMPLETE_MODERATION: "mod" }; // everything else is "flow"
+const groupOf = (it) => GROUP[it.action] ?? "flow";
+const signed = (v) => { const n = Number(v); return `${n > 0 ? "+" : ""}${n}`; };
+const dayKey = (d) => new Date(d).toLocaleDateString("en-CA");
+const dayLabel = (iso) => {
+  const k = dayKey(iso), now = new Date();
+  if (k === dayKey(now)) return "Today";
+  if (k === dayKey(new Date(now.getTime() - 864e5))) return "Yesterday";
+  return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+};
+const timeOf = (iso) => new Date(iso).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
+
+// Turns a raw audit row into words people can read.
+function describe(it) {
+  const who = it.count > 1 ? `${it.count} students` : it.student ? `${it.student.rollNo} · ${it.student.name}` : null;
+  switch (it.action) {
+    case "MARK_SET": {
+      const had = it.oldValue != null, has = it.newValue != null;
+      return {
+        title: !had ? `${it.component} mark entered` : !has ? `${it.component} mark cleared` : `${it.component} mark changed`,
+        who, change: [it.oldValue, it.newValue],
+      };
+    }
+    case "MODERATE":
+      return { title: Number(it.newValue) === 0 ? `Moderation cleared · ${it.component}` : `Moderation ${signed(it.newValue)} · ${it.component}`, who };
+    case "SUBMIT": return { title: "Submitted for moderation" };
+    case "RETURN": return { title: "Returned to faculty" };
+    case "COMPLETE_MODERATION": return { title: "Moderation completed" };
+    case "LOCK": return { title: "Marks locked", sub: "Now read-only" };
+    case "UNLOCK_REQUEST": return { title: "Unlock requested" };
+    case "UNLOCK_APPROVE": return { title: "Unlock approved", sub: "Sheet returned to Draft" };
+    case "UNLOCK_REJECT": return { title: "Unlock rejected", sub: "Marks stay locked" };
+    case "EXPORT": return { title: "Exported as CSV", sub: it.newValue };
+    default: return { title: it.action };
+  }
+}
+
+const Change = ({ from, to }) =>
+  from == null ? <span className="chg">{to}</span>
+  : to == null ? <span className="chg">{from} <i>removed</i></span>
+  : <span className="chg">{from} <i>→</i> {to}</span>;
+
 function AuditDrawer({ id, onClose }) {
   const { data, error, loading, reload } = useApi(`/marks/${id}/audit`);
+  const [tab, setTab] = useState("all");
+  const items = data?.items ?? [];
+  const shown = items.filter((it) => tab === "all" || groupOf(it) === tab);
+
+  const days = [];
+  shown.forEach((it) => {
+    const k = dayKey(it.at), last = days[days.length - 1];
+    if (last?.k === k) last.items.push(it);
+    else days.push({ k, label: dayLabel(it.at), items: [it] });
+  });
+  const TABS = [["all", "All"], ["marks", "Marks"], ["mod", "Moderation"], ["flow", "Workflow"]];
+
   return (
-    <Modal side flush title="Audit log" onClose={onClose}>
+    <Modal side flush icon={History} title="Audit log" sub="Every change to this sheet. Records can't be edited or deleted." onClose={onClose}>
       {error ? <ErrorState error={error} onRetry={reload} />
-        : loading && !data ? <Skeleton rows={6} />
-        : !data.items.length ? <Empty title="No changes yet" />
+        : loading && !data ? <div style={{ padding: 20 }}><Skeleton rows={6} /></div>
+        : !items.length ? <Empty title="No changes yet" hint="Entries appear here as marks are entered and reviewed." />
         : (
-          <ul className="audit">
-            {data.items.map((it) => (
-              <li key={it.id}>
-                <div className="a-top"><b>{LABEL[it.action] ?? it.action}</b><span className="muted tnum">{when(it.at)}</span></div>
-                <div className="a-line">
-                  {it.student && <span className="mono">{it.student.rollNo}</span>}
-                  {it.component && <span>{it.component}</span>}
-                  {(it.oldValue != null || it.newValue != null) && <span className="tnum">{it.oldValue ?? "—"} → {it.newValue ?? "—"}</span>}
-                </div>
-                {it.reason && <div className="a-reason">“{it.reason}”</div>}
-                <div className="muted" style={{ fontSize: 12 }}>by {it.actor.name}</div>
-              </li>
-            ))}
-          </ul>
+          <>
+            <div className="audit-tabs" role="tablist">
+              {TABS.map(([k, l]) => (
+                <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>
+                  {l} <span className="tnum">{k === "all" ? items.length : items.filter((i) => groupOf(i) === k).length}</span>
+                </button>
+              ))}
+            </div>
+            {!shown.length ? <Empty title="Nothing here" hint="No entries in this category." /> : (
+              <ol className="tl">
+                {days.map((day) => (
+                  <Fragment key={day.k}>
+                    <li className="tl-day">{day.label}</li>
+                    {day.items.map((it) => {
+                      const k = KIND[it.action] ?? KIND.MARK_SET, d = describe(it), Icon = k.icon;
+                      return (
+                        <li key={it.id} className="tl-item">
+                          <span className={`tl-ic ${k.tone}`}><Icon size={15} /></span>
+                          <div className="tl-main">
+                            <div className="tl-top"><b>{d.title}</b><time className="tnum">{timeOf(it.at)}</time></div>
+                            {(d.who || d.change || d.sub) && (
+                              <div className="tl-detail">
+                                {d.change && <Change from={d.change[0]} to={d.change[1]} />}
+                                {d.who && <span className={it.count > 1 ? "" : "muted"}>{d.who}</span>}
+                                {d.sub && <span className="muted">{d.sub}</span>}
+                              </div>
+                            )}
+                            {it.reason && <div className="tl-reason">{it.reason}</div>}
+                            <div className="tl-by">by {it.actor.name}{it.actor.role === "ADMIN" ? " · Office admin" : it.actor.role === "FACULTY" ? " · Faculty" : ""}</div>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </Fragment>
+                ))}
+              </ol>
+            )}
+          </>
         )}
     </Modal>
   );

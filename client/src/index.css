@@ -63,7 +63,7 @@ h2 { font-size: 15px; line-height: 20px; font-weight: 600; letter-spacing: -0.00
 .tabbar { display: none; }
 
 /* ---------- Page anatomy ---------- */
-.page { animation: rise .28s cubic-bezier(.2,.7,.2,1) both; }
+.page { animation: rise .28s cubic-bezier(.2,.7,.2,1) backwards; }
 @keyframes rise { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
 .eyebrow { margin-bottom: 4px; }
@@ -369,3 +369,38 @@ textarea.input { height: auto; min-height: 84px; padding: 10px 12px; resize: ver
   .modal-foot { flex-direction: column-reverse; }
   .modal-foot .btn { width: 100%; height: 44px; }
 }
+
+/* ---------- Dialog polish and audit timeline ---------- */
+.overlay { background: color-mix(in srgb, var(--ink) 16%, transparent); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.overlay.side { background: color-mix(in srgb, var(--ink) 10%, transparent); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.overlay.side .modal { box-shadow: -16px 0 40px -20px rgb(16 24 40 / .25); }
+
+.audit-tabs { position: sticky; top: 0; z-index: 2; display: flex; gap: 6px; padding: 12px 20px; overflow-x: auto;
+  background: var(--surface); border-bottom: 1px solid var(--line); }
+.audit-tabs button { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; cursor: pointer; white-space: nowrap;
+  font: 500 12.5px/1 "Inter Variable", system-ui, sans-serif; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+.audit-tabs button:hover { color: var(--ink); background: var(--surface-low); }
+.audit-tabs button.on { color: #fff; background: var(--teal); border-color: var(--teal); }
+.audit-tabs button span { opacity: .75; font-size: 11.5px; }
+
+.tl { list-style: none; margin: 0; padding: 0 20px 28px; }
+.tl-day { padding: 18px 0 12px; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); }
+.tl-item { position: relative; display: grid; grid-template-columns: 32px 1fr; gap: 12px; padding-bottom: 20px; }
+.tl-item::before { content: ""; position: absolute; left: 15.5px; top: 34px; bottom: 2px; width: 1px; background: var(--line); }
+.tl-item:last-child::before, .tl-item:has(+ .tl-day)::before { display: none; }
+.tl-ic { position: relative; z-index: 1; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%;
+  background: var(--surface-low); color: var(--ink-2); border: 1px solid var(--line); }
+.tl-ic.mod { background: var(--teal-tint); color: var(--teal-ink); border-color: transparent; }
+.tl-ic.flow { background: var(--teal); color: #fff; border-color: transparent; }
+.tl-ic.risk { background: var(--risk-tint); color: var(--risk); border-color: transparent; }
+.tl-main { min-width: 0; padding-top: 5px; }
+.tl-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.tl-top b { font-size: 13.5px; font-weight: 600; letter-spacing: -0.005em; }
+.tl-top time { font-size: 12px; color: var(--ink-2); white-space: nowrap; }
+.tl-detail { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 6px; font-size: 13px; }
+.chg { display: inline-flex; align-items: center; gap: 6px; padding: 1px 8px; font-size: 12.5px; font-weight: 600;
+  font-variant-numeric: tabular-nums; background: var(--chip); border: 1px solid var(--line); border-radius: 6px; }
+.chg i { font-style: normal; font-weight: 400; color: var(--ink-2); }
+.tl-reason { margin-top: 8px; padding: 8px 12px; font-size: 13px; line-height: 19px; background: var(--surface-low);
+  border-left: 2px solid var(--line-2); border-radius: 0 8px 8px 0; }
+.tl-by { margin-top: 6px; font-size: 12px; color: var(--ink-2); }

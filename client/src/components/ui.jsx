@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { AlertCircle, Check, Inbox, Lock, X } from "lucide-react";
 
 export const PageHeader = ({ title, sub, action, eyebrow }) => (
@@ -100,7 +101,7 @@ export function Modal({ title, sub, icon: Icon, tone, onClose, children, footer,
     };
   }, []);
 
-  return (
+  return createPortal(
     <div className={`overlay ${side ? "side" : ""}`} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div ref={ref} tabIndex={-1} className="modal" role="dialog" aria-modal="true" aria-label={title}>
         <div className="modal-head">
@@ -111,6 +112,7 @@ export function Modal({ title, sub, icon: Icon, tone, onClose, children, footer,
         <div className={flush ? "modal-flush" : "modal-body"}>{children}</div>
         {footer && <div className="modal-foot">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
