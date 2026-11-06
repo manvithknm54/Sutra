@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { Link } from "react-router-dom";
 import { AlertCircle, Check, Inbox, Lock, X } from "lucide-react";
 
 export const PageHeader = ({ title, sub, action, eyebrow }) => (
@@ -13,13 +14,16 @@ export const PageHeader = ({ title, sub, action, eyebrow }) => (
   </div>
 );
 
-export const Kpi = ({ label, value, note, tone }) => (
-  <div className="kpi">
-    <p className="label">{label}</p>
-    <p className={`k-value ${tone === "risk" ? "risk" : ""}`}>{value}</p>
-    {note && <p className="k-note">{note}</p>}
-  </div>
-);
+export const Kpi = ({ label, value, note, tone, to }) => {
+  const body = (
+    <>
+      <p className="label">{label}</p>
+      <p className={`k-value ${tone === "risk" ? "risk" : ""}`}>{value}</p>
+      {note && <p className="k-note">{note}</p>}
+    </>
+  );
+  return to ? <Link to={to} className="kpi link">{body}</Link> : <div className="kpi">{body}</div>;
+};
 
 export const Panel = ({ title, meta, children }) => (
   <section className="panel">
@@ -85,6 +89,8 @@ export function Modal({ title, sub, icon: Icon, tone, onClose, children, footer,
     if (!ref.current.contains(document.activeElement)) ref.current.focus();
 
     const onKey = (e) => {
+      const all = document.querySelectorAll(".modal");
+      if (all[all.length - 1] !== ref.current) return;
       if (e.key === "Escape") return closeRef.current();
       if (e.key !== "Tab") return;
       const f = ref.current.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])');
