@@ -2,6 +2,7 @@ import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 import { seedAttendance } from "./seedAttendance.js";
+import { seedMarks } from "./seedMarks.js";
 import { runShortageAlerts } from "../src/lib/alerts.js";
 
 const prisma = new PrismaClient();
@@ -22,9 +23,10 @@ const phone = (n) => `98${String(10000000 + n * 1237).padStart(8, "0")}`;
 const person = (i) => `${FIRST[i % 20]} ${LAST[Math.floor(i / 5) % 12]}`;
 
 async function reset() {
-  for (const m of ["alertLog","mentorTask","riskFlag","feeLedgerEntry","feeStructure","markAudit","markEntry",
-    "markComponent","attendanceRecord","attendanceSession","courseAllocation","student","subject","batch",
-    "programme","user","campus"]) {
+  // MarkAudit is append-only (a DB trigger blocks DELETE), so the seed resets it with TRUNCATE.
+  await prisma.$executeRawUnsafe('TRUNCATE TABLE "MarkAudit"');
+  for (const m of ["alertLog","mentorTask","riskFlag","feeLedgerEntry","feeStructure","markEntry","markComponent",
+    "attendanceRecord","attendanceSession","courseAllocation","student","subject","batch","programme","user","campus"]) {
     await prisma[m].deleteMany();
   }
 }
@@ -36,7 +38,7 @@ async function main() {
   const campus = await prisma.campus.create({ data: { name: "Sutra Engineering College (Demo)", code: "ENG" } });
   const campusId = campus.id;
 
-  await prisma.user.create({ data: { campusId, name: "Lipika Rath", email: "admin@sutra.demo", passwordHash, role: "ADMIN" } });
+  const admin = await prisma.user.create({ data: { campusId, name: "Lipika Rath", email: "admin@sutra.demo", passwordHash, role: "ADMIN" } });
 
   const fac = {};
   for (const [name, email] of [
@@ -97,6 +99,7 @@ async function main() {
 
   // Seed attendance history and generate shortage alerts.
   await seedAttendance(prisma);
+  await seedMarks(prisma, admin.id);
 
   const alerts = await runShortageAlerts(campusId, { db: prisma });
   console.log(`Shortage alert log rows: ${alerts.created}`);
