@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Download, History, Lock, Search } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCheck, Download, History, KeyRound, Lock, Search, Send, SlidersHorizontal, Undo2 } from "lucide-react";
 import { api } from "../api";
 import { useApi } from "../hooks.js";
 import { Empty, ErrorState, Kpi, Modal, PageHeader, Panel, Skeleton, Stepper, StatusBadge } from "../components/ui.jsx";
@@ -72,7 +72,7 @@ function MarkCell({ cell, max, label, editable, onSave, inputRef, onEnter }) {
   );
 }
 
-function ActionDialog({ title, body, confirm, reasonLabel, onConfirm, onClose }) {
+function ActionDialog({ title, body, confirm, reasonLabel, facts, note, icon, danger, onConfirm, onClose }) {
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -82,11 +82,12 @@ function ActionDialog({ title, body, confirm, reasonLabel, onConfirm, onClose })
     try { await onConfirm(reason.trim() || undefined); onClose(); } catch (e) { setErr(e.message); setBusy(false); }
   }
   return (
-    <Modal title={title} onClose={onClose} footer={<>
+    <Modal title={title} sub={body} icon={icon} tone={danger ? "risk" : ""} onClose={onClose} footer={<>
       <button className="btn secondary" onClick={onClose}>Cancel</button>
-      <button className="btn" disabled={!ok || busy} onClick={go}>{busy ? "Working…" : confirm}</button>
+      <button className={`btn ${danger ? "danger" : ""}`} disabled={!ok || busy} onClick={go}>{busy ? "Working…" : confirm}</button>
     </>}>
-      <p className="muted">{body}</p>
+      {facts && <dl className="facts">{facts.map(([k, v]) => <div key={k}><dt>{k}</dt><dd className="tnum">{v}</dd></div>)}</dl>}
+      {note && <div className="callout"><AlertCircle size={16} /><span>{note}</span></div>}
       {reasonLabel && (
         <div className="field"><label htmlFor="why">{reasonLabel}</label>
           <textarea id="why" className="input" autoFocus maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} /></div>
@@ -116,11 +117,10 @@ function ModerateDialog({ sheet, id, onClose, onDone }) {
     } catch (e) { setErr(e.message); setBusy(false); }
   }
   return (
-    <Modal title="Add moderation" onClose={onClose} footer={<>
+    <Modal title="Add moderation" icon={SlidersHorizontal} sub="Added on top of the raw mark and recorded with your reason. Raw marks are never overwritten." onClose={onClose} footer={<>
       <button className="btn secondary" onClick={onClose}>Cancel</button>
       <button className="btn" disabled={!valid || busy} onClick={go}>{busy ? "Applying…" : "Apply"}</button>
     </>}>
-      <p className="muted">Moderation is added on top of the raw mark and recorded with your reason. Raw marks are never overwritten.</p>
       <div className="field"><label>Apply to</label>
         <select className="select" value={scope} onChange={(e) => setScope(e.target.value)}>
           <option value="all">Whole class</option><option value="one">One student</option>
@@ -221,7 +221,7 @@ export default function MarkSheet() {
   const { perms, stats, allocation: al, components, status } = d;
   const missingTotal = stats.expected - stats.filled;
   const open = (type, extra) => setDialog({ type, ...extra });
-  const act = (action, title, body, confirm, reasonLabel) => open("action", { action, title, body, confirm, reasonLabel });
+  const act = (cfg) => open("action", cfg);
 
   return (
     <div className="page">
@@ -236,18 +236,51 @@ export default function MarkSheet() {
             {perms.canExport && <button className="btn" onClick={exportCsv}><Download size={15} /> Export CSV</button>}
             {perms.canSubmit && (
               <button className="btn" disabled={missingTotal > 0} title={missingTotal ? `${missingTotal} marks missing` : undefined}
-                onClick={() => act("SUBMIT", "Submit for moderation", `Submit marks for ${d.rows.length} students. You won't be able to edit them after this.`, "Submit")}>
-                Submit for moderation
-              </button>
+                onClick={() => act({
+                  action: "SUBMIT", icon: Send, title: "Submit for moderation", confirm: "Submit marks",
+                  body: "Your marks go to the office admin for moderation.",
+                  facts: [["Students", d.rows.length], ["Components", components.length], ["Marks entered", stats.filled]],
+                  note: "After you submit, you can't edit these marks. If something is wrong, the admin can return the sheet to you.",
+                })}>Submit for moderation</button>
             )}
-            {perms.canReturn && <button className="btn secondary" onClick={() => act("RETURN", "Return to faculty", "The sheet goes back to Draft so the faculty can correct it.", "Return", "Reason for returning")}>Return to faculty</button>}
+            {perms.canReturn && (
+              <button className="btn secondary" onClick={() => act({
+                action: "RETURN", icon: Undo2, title: "Return to faculty", confirm: "Return sheet",
+                body: "The sheet goes back to Draft so the faculty can correct it.", reasonLabel: "Reason for returning",
+              })}>Return to faculty</button>
+            )}
             {perms.canModerate && <button className="btn secondary" onClick={() => open("moderate")}>Add moderation</button>}
-            {perms.canCompleteModeration && <button className="btn" onClick={() => act("COMPLETE_MODERATION", "Complete moderation", "Moderation is finished. The sheet moves on to locking.", "Complete")}>Complete moderation</button>}
-            {perms.canLock && <button className="btn" onClick={() => act("LOCK", "Lock marks", `This locks all ${stats.filled} marks. After this, any change needs an approved unlock request.`, "Lock marks")}><Lock size={14} /> Lock marks</button>}
-            {perms.canRequestUnlock && <button className="btn secondary" onClick={() => act("UNLOCK_REQUEST", "Request unlock", "The office admin will review your request. The marks stay locked until it is approved.", "Send request", "What needs correcting?")}>Request unlock</button>}
+            {perms.canCompleteModeration && (
+              <button className="btn" onClick={() => act({
+                action: "COMPLETE_MODERATION", icon: CheckCheck, title: "Complete moderation", confirm: "Complete moderation",
+                body: "Moderation is finished and the sheet is ready to lock.",
+                facts: [["Moderated students", stats.moderatedCount], ["Marks", stats.filled]],
+              })}>Complete moderation</button>
+            )}
+            {perms.canLock && (
+              <button className="btn" onClick={() => act({
+                action: "LOCK", icon: Lock, title: "Lock marks", confirm: "Lock marks",
+                body: "Locking makes the marks read-only for everyone.",
+                facts: [["Marks", stats.filled], ["Moderated students", stats.moderatedCount]],
+                note: "After this, any change needs an unlock request that the office admin approves. Every change is logged.",
+              })}><Lock size={14} /> Lock marks</button>
+            )}
+            {perms.canRequestUnlock && (
+              <button className="btn secondary" onClick={() => act({
+                action: "UNLOCK_REQUEST", icon: KeyRound, title: "Request unlock", confirm: "Send request",
+                body: "The office admin will review your request. The marks stay locked until it is approved.", reasonLabel: "What needs correcting?",
+              })}>Request unlock</button>
+            )}
             {perms.canResolveUnlock && <>
-              <button className="btn secondary" onClick={() => act("UNLOCK_REJECT", "Reject unlock request", "The marks stay locked.", "Reject", "Reason for rejecting")}>Reject unlock</button>
-              <button className="btn" onClick={() => act("UNLOCK_APPROVE", "Approve unlock", "The sheet returns to Draft so the faculty can correct it. It must be submitted, moderated and locked again.", "Approve", "Note for the record")}>Approve unlock</button>
+              <button className="btn secondary" onClick={() => act({
+                action: "UNLOCK_REJECT", icon: KeyRound, danger: true, title: "Reject unlock request", confirm: "Reject request",
+                body: "The marks stay locked.", reasonLabel: "Reason for rejecting",
+              })}>Reject unlock</button>
+              <button className="btn" onClick={() => act({
+                action: "UNLOCK_APPROVE", icon: KeyRound, title: "Approve unlock", confirm: "Approve unlock",
+                body: "The sheet returns to Draft so the faculty can correct it.",
+                note: "It must be submitted, moderated and locked again before it can be exported.", reasonLabel: "Note for the record",
+              })}>Approve unlock</button>
             </>}
           </div>
         }

@@ -283,14 +283,6 @@ h1 .badge { vertical-align: middle; margin-left: 10px; font-size: 12px; letter-s
   color: #fff; background: var(--risk); border-radius: 4px; }
 .dlt { margin-left: 6px; color: var(--teal-ink); font-size: 11px; font-weight: 600; }
 
-.overlay { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; background: rgb(15 18 22 / .45); }
-.modal { width: 100%; max-width: 480px; max-height: 90dvh; overflow: auto; background: var(--surface);
-  border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 24px 60px -24px rgb(0 0 0 / .45); }
-.modal-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--line); }
-.modal-body { padding: 20px; display: grid; gap: 14px; }
-.modal-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--line); background: var(--canvas); }
-.overlay.side { place-items: stretch end; padding: 0; }
-.overlay.side .modal { max-width: 460px; height: 100dvh; max-height: none; border-radius: 0; border-width: 0 0 0 1px; }
 textarea.input { height: auto; min-height: 84px; padding: 10px 12px; resize: vertical; font: inherit; }
 .audit { list-style: none; margin: 0; padding: 0; }
 .audit li { padding: 14px 20px; border-bottom: 1px solid var(--line); display: grid; gap: 3px; }
@@ -305,9 +297,6 @@ textarea.input { height: auto; min-height: 84px; padding: 10px 12px; resize: ver
   .stepper li:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
   .marks .hm { display: none; }
   .actions { justify-content: flex-start; }
-  .overlay { place-items: end center; padding: 0; }
-  .overlay .modal { max-width: none; border-radius: 14px 14px 0 0; }
-  .overlay.side .modal { height: 100dvh; border-radius: 0; }
 }
 
 /* ---------- Mobile ---------- */
@@ -331,3 +320,52 @@ textarea.input { height: auto; min-height: 84px; padding: 10px 12px; resize: ver
   .kbd { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* ---------- Dialogs ---------- */
+.overlay { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px;
+  background: color-mix(in srgb, var(--ink) 22%, transparent);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); animation: fade .16s ease-out both; }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes slidein { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+@keyframes sheet { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+
+.modal { width: 100%; max-width: 460px; max-height: calc(100dvh - 40px); display: flex; flex-direction: column; overflow: hidden; outline: none;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+  box-shadow: 0 1px 2px rgb(16 24 40 / .06), 0 24px 56px -12px rgb(16 24 40 / .28);
+  animation: pop .2s cubic-bezier(.2, .8, .2, 1) both; }
+.modal-head { display: flex; align-items: flex-start; gap: 14px; padding: 22px 22px 6px; }
+.m-icon { flex: none; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px;
+  background: var(--teal-tint); color: var(--teal-ink); }
+.m-icon.risk { background: var(--risk-tint); color: var(--risk); }
+.m-title { flex: 1; min-width: 0; padding-top: 2px; }
+.m-title h2 { font-size: 16px; line-height: 22px; letter-spacing: -0.01em; }
+.m-title p { margin-top: 4px; font-size: 13px; line-height: 19px; color: var(--ink-2); }
+.modal-body { padding: 14px 22px 4px; display: grid; gap: 14px; overflow: auto; }
+.modal-flush { flex: 1; overflow: auto; }
+.modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 18px 22px 22px; }
+.modal-foot .btn { height: 40px; min-width: 96px; }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin: 0; }
+.facts div { padding: 10px 12px; background: var(--surface-low); border-radius: 10px; }
+.facts dt { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); }
+.facts dd { margin: 2px 0 0; font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
+.callout { display: flex; gap: 10px; padding: 10px 12px; font-size: 13px; line-height: 19px; background: var(--chip);
+  border: 1px solid var(--line); border-radius: 10px; }
+.callout svg { flex: none; margin-top: 2px; color: var(--ink-2); }
+.btn.danger { background: var(--risk); }
+.btn.danger:hover { background: color-mix(in srgb, var(--risk) 85%, #000); }
+
+/* Side drawer (audit log) */
+.overlay.side { place-items: stretch end; padding: 0; }
+.overlay.side .modal { max-width: 460px; height: 100dvh; max-height: none; border-radius: 0; border-width: 0 0 0 1px;
+  animation: slidein .24s cubic-bezier(.2, .8, .2, 1) both; }
+.overlay.side .modal-head { align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+
+@media (max-width: 900px) {
+  .overlay { place-items: end center; padding: 0; }
+  .modal { max-width: none; border-radius: 16px 16px 0 0; padding-bottom: env(safe-area-inset-bottom); animation-name: sheet; }
+  .overlay.side .modal { height: 100dvh; border-radius: 0; animation-name: slidein; }
+  .modal-foot { flex-direction: column-reverse; }
+  .modal-foot .btn { width: 100%; height: 44px; }
+}

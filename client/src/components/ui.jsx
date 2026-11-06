@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { AlertCircle, Check, Inbox, Lock, X } from "lucide-react";
 
 export const PageHeader = ({ title, sub, action, eyebrow }) => (
@@ -72,17 +72,43 @@ export const Stepper = ({ status }) => {
   );
 };
 
-export function Modal({ title, onClose, children, footer, side, flush }) {
+export function Modal({ title, sub, icon: Icon, tone, onClose, children, footer, side, flush }) {
+  const ref = useRef(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+
   useEffect(() => {
-    const h = (e) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", h);
-    return () => window.removeEventListener("keydown", h);
-  }, [onClose]);
+    const prevFocus = document.activeElement;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    if (!ref.current.contains(document.activeElement)) ref.current.focus();
+
+    const onKey = (e) => {
+      if (e.key === "Escape") return closeRef.current();
+      if (e.key !== "Tab") return;
+      const f = ref.current.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+      prevFocus?.focus?.();
+    };
+  }, []);
+
   return (
     <div className={`overlay ${side ? "side" : ""}`} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal" role="dialog" aria-modal="true" aria-label={title}>
-        <div className="modal-head"><h2>{title}</h2><button className="icon-btn" aria-label="Close" onClick={onClose}><X size={18} /></button></div>
-        <div className={flush ? "" : "modal-body"}>{children}</div>
+      <div ref={ref} tabIndex={-1} className="modal" role="dialog" aria-modal="true" aria-label={title}>
+        <div className="modal-head">
+          {Icon && <span className={`m-icon ${tone || ""}`}><Icon size={19} /></span>}
+          <div className="m-title"><h2>{title}</h2>{sub && <p>{sub}</p>}</div>
+          <button className="icon-btn" aria-label="Close" onClick={onClose}><X size={18} /></button>
+        </div>
+        <div className={flush ? "modal-flush" : "modal-body"}>{children}</div>
         {footer && <div className="modal-foot">{footer}</div>}
       </div>
     </div>
