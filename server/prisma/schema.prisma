@@ -248,6 +248,7 @@ model MarkComponent {
 
   name         String
   maxMarks     Int
+  position     Int    @default(0)
 
   entries      MarkEntry[]
 
@@ -284,6 +285,8 @@ model MarkAudit {
 
   entryId      String?
   allocationId String
+  studentId    String?
+  component    String?
   actorId      String
 
   action       String
