@@ -7,6 +7,8 @@ import Students from "./pages/Students.jsx";
 import Masters from "./pages/Masters.jsx";
 import Attendance from "./pages/Attendance.jsx";
 import MarkAttendance from "./pages/MarkAttendance.jsx";
+import Marks from "./pages/Marks.jsx";
+import MarkSheet from "./pages/MarkSheet.jsx";
 
 function Protected() {
   const { user, ready } = useAuth();
@@ -46,6 +48,8 @@ export default function App() {
       <Route element={<Protected />}>
         <Route index element={<Home />} />
         <Route path="students" element={<Students />} />
+        <Route path="marks" element={<Marks />} />
+        <Route path="marks/:allocationId" element={<MarkSheet />} />
 
         {/* Admin-only routes */}
         <Route element={<RoleGate roles={["ADMIN"]} />}>
