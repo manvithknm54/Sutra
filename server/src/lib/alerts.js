@@ -1,5 +1,7 @@
 import { prisma } from "../db.js";
 import { MIN_SESSIONS, THRESHOLD_PCT, isShortage, istNow, percent, weekKey } from "./attendance.js";
+import { feeRows } from "./feeData.js";
+import { feeReminderMessage } from "./fees.js";
 
 // Odia text needs review by a native speaker before launch (noted in the TDD).
 export const messageFor = (name, pct) => ({
@@ -33,14 +35,35 @@ export async function runShortageAlerts(campusId, { db = prisma, now = istNow() 
     if (!s.guardianPhone) continue;
     const t = tally.get(s.id);
     const m = messageFor(s.name, percent(t.present, t.total));
-    const held = s.isMinor && !s.guardianConsent; // DPDP: no message to a minor's guardian without consent
+    const held = s.isMinor && !s.guardianConsent;
     rows.push({
       studentId: s.id, weekKey: wk, channel: "MOCK_SMS", language: "EN+OD",
       kind: held ? "SHORTAGE_HELD" : "SHORTAGE",
       body: held ? `Held: guardian consent pending. Would send: ${m.en}` : `${m.en}\n${m.od}`,
     });
   }
-  // unique(studentId, kind, weekKey) + skipDuplicates = safe to run any number of times
   const r = await db.alertLog.createMany({ data: rows, skipDuplicates: true });
+  return { created: r.count };
+}
+
+export async function runFeeReminders(campusId, { db = prisma, now = istNow() } = {}) {
+  const rows = (await feeRows(db, campusId, now.toISOString().slice(0, 10))).filter((r) => r.due > 0 && r.overdueDays > 0);
+  if (!rows.length) return { created: 0 };
+  const students = await db.student.findMany({
+    where: { id: { in: rows.map((r) => r.studentId) } }, select: { id: true, guardianPhone: true, isMinor: true, guardianConsent: true },
+  });
+  const S = new Map(students.map((s) => [s.id, s]));
+  const wk = weekKey(now);
+  const data = [];
+  for (const r of rows) {
+    const s = S.get(r.studentId);
+    if (!s?.guardianPhone) continue;
+    const m = feeReminderMessage(r.name, r.rollNo, r.due, r.overdueDays);
+    const held = s.isMinor && !s.guardianConsent;
+    data.push({ studentId: r.studentId, weekKey: wk, channel: "MOCK_SMS", language: "EN+OD",
+      kind: held ? "FEE_REMINDER_HELD" : "FEE_REMINDER",
+      body: held ? `Held: guardian consent pending. Would send: ${m.en}` : `${m.en}\n${m.od}` });
+  }
+  const r = await db.alertLog.createMany({ data, skipDuplicates: true });
   return { created: r.count };
 }
