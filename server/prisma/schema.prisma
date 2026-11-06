@@ -47,6 +47,12 @@ enum FlagStatus {
   ACTIONED
 }
 
+enum LinkStatus {
+  OPEN
+  PAID
+  CANCELLED
+}
+
 // ==========================================
 // CAMPUS
 // ==========================================
@@ -189,6 +195,7 @@ model Student {
   ledger          FeeLedgerEntry[]
   flags           RiskFlag[]
   alerts          AlertLog[]
+  paymentLinks    PaymentLink[]
 }
 
 // ==========================================
@@ -321,19 +328,37 @@ model FeeStructure {
 // Append-only financial transactions
 // ==========================================
 
+// Append-only. Dues = CHARGE - PAYMENT - SCHOLARSHIP. Nothing is ever edited, only added.
 model FeeLedgerEntry {
-  id             String   @id @default(cuid())
-
+  id             String     @id @default(cuid())
   studentId      String
-  student        Student  @relation(fields: [studentId], references: [id])
-
+  student        Student    @relation(fields: [studentId], references: [id])
   type           LedgerType
   amountPaise    Int
   note           String?
+  idempotencyKey String     @unique
+  dueDate        DateTime?  @db.Date
+  receiptNo      String?    @unique
+  method         String?
+  reference      String?
+  actorId        String?
+  at             DateTime   @default(now())
 
-  idempotencyKey String   @unique
+  @@index([studentId])
+}
 
-  at             DateTime @default(now())
+// Test-mode payment link a parent opens without logging in.
+model PaymentLink {
+  id          String     @id @default(cuid())
+  studentId   String
+  student     Student    @relation(fields: [studentId], references: [id])
+  token       String     @unique
+  amountPaise Int
+  status      LinkStatus @default(OPEN)
+  expiresAt   DateTime
+  createdById String
+  createdAt   DateTime   @default(now())
+  paidAt      DateTime?
 
   @@index([studentId])
 }
@@ -343,20 +368,19 @@ model FeeLedgerEntry {
 // ==========================================
 
 model RiskFlag {
-  id            String   @id @default(cuid())
-
+  id            String     @id @default(cuid())
   studentId     String
-  student       Student  @relation(fields: [studentId], references: [id])
-
+  student       Student    @relation(fields: [studentId], references: [id])
   score         Int
   reasons       Json
-
   status        FlagStatus @default(OPEN)
   dismissReason String?
-
-  createdAt     DateTime @default(now())
-
+  dismissedById String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @default(now()) @updatedAt
   task          MentorTask?
+
+  @@index([status])
 }
 
 // ==========================================
@@ -364,16 +388,15 @@ model RiskFlag {
 // ==========================================
 
 model MentorTask {
-  id        String   @id @default(cuid())
-
-  flagId    String   @unique
-  flag      RiskFlag @relation(fields: [flagId], references: [id])
-
+  id        String    @id @default(cuid())
+  flagId    String    @unique
+  flag      RiskFlag  @relation(fields: [flagId], references: [id])
   mentorId  String
-  mentor    User     @relation(fields: [mentorId], references: [id])
-
-  done      Boolean  @default(false)
-  createdAt DateTime @default(now())
+  mentor    User      @relation(fields: [mentorId], references: [id])
+  done      Boolean   @default(false)
+  doneAt    DateTime?
+  note      String?
+  createdAt DateTime  @default(now())
 }
 
 // ==========================================
