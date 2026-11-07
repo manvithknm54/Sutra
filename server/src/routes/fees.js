@@ -6,7 +6,7 @@ import { prisma } from "../db.js";
 import { csvCell } from "../lib/marks.js";
 import { HttpError } from "../lib/http.js";
 import { checkAmount, dueOf, feeLinkMessage, inr, studyYear, toPaise } from "../lib/fees.js";
-import { feeRows, ledgerTotals, nextReceiptNo } from "../lib/feeData.js";
+import { feeRowsCached, ledgerTotals, nextReceiptNo } from "../lib/feeData.js";
 
 const router = Router();
 const SERIALIZABLE = { isolationLevel: Prisma.TransactionIsolationLevel.Serializable, timeout: 15000 };
@@ -41,7 +41,7 @@ router.get("/dues", async (req, res) => {
   const q = DuesQuery.safeParse(req.query);
   if (!q.success) return res.status(400).json({ error: "Invalid filters" });
   const { search, programmeId, status, page, pageSize } = q.data;
-  const all = await feeRows(prisma, req.user.campusId);
+  const all = await feeRowsCached(req.user.campusId);
 
   const owing = all.filter((r) => r.due > 0), crit = all.filter((r) => r.status === "CRITICAL");
   const sum = (a, k) => a.reduce((n, r) => n + r[k], 0);

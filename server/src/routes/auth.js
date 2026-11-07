@@ -9,10 +9,8 @@ import { COOKIE, requireAuth } from "../middleware/auth.js";
 const router = Router();
 
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
+  windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false,
+  keyGenerator: (req) => String(req.body?.email ?? "").toLowerCase().slice(0, 120) || "anonymous",
   message: { error: "Too many attempts. Try again in a few minutes." },
 });
 

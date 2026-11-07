@@ -1,0 +1,1 @@
+export const CURRENT_TERM = "2026-27";
