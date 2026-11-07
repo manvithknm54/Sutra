@@ -196,6 +196,10 @@ model Student {
   flags           RiskFlag[]
   alerts          AlertLog[]
   paymentLinks    PaymentLink[]
+  consents        ConsentRecord[]
+
+  @@index([campusId])
+  @@index([batchId])
 }
 
 // ==========================================
@@ -222,6 +226,7 @@ model AttendanceSession {
   records      AttendanceRecord[]
 
   @@unique([allocationId, date, period])
+  @@index([date])
 }
 
 // ==========================================
@@ -370,7 +375,7 @@ model PaymentLink {
 model RiskFlag {
   id            String     @id @default(cuid())
   studentId     String
-  student       Student    @relation(fields: [studentId], references: [id])
+  student       Student   @relation(fields: [studentId], references: [id])
   score         Int
   reasons       Json
   status        FlagStatus @default(OPEN)
@@ -419,4 +424,19 @@ model AlertLog {
   at        DateTime @default(now())
 
   @@unique([studentId, kind, weekKey])
+}
+
+// Who consented, who recorded it, and when. Withdrawals are recorded too.
+model ConsentRecord {
+  id           String   @id @default(cuid())
+  studentId    String
+  student      Student  @relation(fields: [studentId], references: [id])
+  kind         String   // GIVEN or WITHDRAWN
+  guardianName String?
+  relation     String?
+  note         String?
+  recordedById String
+  at           DateTime @default(now())
+
+  @@index([studentId])
 }

@@ -26,7 +26,7 @@ const person = (i) => `${FIRST[i % 20]} ${LAST[Math.floor(i / 5) % 12]}`;
 
 async function reset() {
   await prisma.$executeRawUnsafe('TRUNCATE TABLE "MarkAudit"'); // append-only table: reset by TRUNCATE
-  for (const m of ["alertLog", "mentorTask", "riskFlag", "paymentLink", "feeLedgerEntry", "feeStructure", "markEntry", "markComponent",
+  for (const m of ["alertLog", "mentorTask", "riskFlag", "consentRecord", "paymentLink", "feeLedgerEntry", "feeStructure", "markEntry", "markComponent",
     "attendanceRecord", "attendanceSession", "courseAllocation", "student", "subject", "batch", "programme", "user", "campus"]) {
     await prisma[m].deleteMany();
   }

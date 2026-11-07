@@ -1,6 +1,7 @@
 import { prisma } from "../db.js";
 import { dueOf, overdueDays, receiptLabel, statusOf } from "./fees.js";
 import { todayIST } from "./attendance.js";
+import { cached } from "./cache.js";
 
 // A database sequence, so two receipts can never get the same number.
 export async function nextReceiptNo(db = prisma) {
@@ -44,3 +45,5 @@ export async function feeRows(db, campusId, today = todayIST()) {
     };
   });
 }
+
+export const feeRowsCached = (campusId, today = todayIST()) => cached(campusId, `fees:${today}`, () => feeRows(prisma, campusId, today));
