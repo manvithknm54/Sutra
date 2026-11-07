@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { NavLink } from "react-router-dom";
-import { Bell, CalendarDays, GraduationCap, IndianRupee, LayoutDashboard, LogOut, ShieldAlert, SlidersHorizontal, SquarePen, UserCheck } from "lucide-react";
+import { Bell, CalendarDays, GraduationCap, IndianRupee, LayoutDashboard, LogOut, ShieldAlert, SlidersHorizontal, Sparkles, SquarePen, UserCheck } from "lucide-react";
 import { useAuth } from "../auth.jsx";
 import { TERM_LABEL } from "../config.js";
 import { initSync } from "../lib/offline.js";
@@ -15,6 +15,7 @@ const ADMIN_NAV = [
   { to: "/marks", label: "Marks", icon: SquarePen },
   { to: "/risk", label: "At risk", icon: ShieldAlert },
   { to: "/alerts", label: "Alerts", icon: Bell },
+  { to: "/ask", label: "Ask Sutra", icon: Sparkles },
   { to: "/students", label: "Students", icon: GraduationCap },
   { to: "/masters", label: "Masters", icon: SlidersHorizontal },
 ];
