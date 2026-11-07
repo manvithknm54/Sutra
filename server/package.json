@@ -7,7 +7,9 @@
     "test": "vitest run",
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-    "seed": "node prisma/seed.js"
+    "seed": "node prisma/seed.js",
+    "loadtest": "node scripts/loadtest.mjs",
+    "seed:scale": "node scripts/seed-scale.js"
   },
   "keywords": [],
   "author": "",
