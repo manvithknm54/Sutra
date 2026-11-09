@@ -3,6 +3,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../db.js";
+import { publicOrigin } from "../config.js";
 import { csvCell } from "../lib/marks.js";
 import { HttpError } from "../lib/http.js";
 import { checkAmount, dueOf, feeLinkMessage, inr, studyYear, toPaise } from "../lib/fees.js";
@@ -84,7 +85,7 @@ router.get("/student/:id", async (req, res) => {
       guardianPhone: st.guardianPhone ? `••••••${st.guardianPhone.slice(-4)}` : null, isMinor: st.isMinor, guardianConsent: st.guardianConsent },
     totals: { billed: t.charge ?? 0, scholarship: t.scholarship ?? 0, paid: t.payment ?? 0, due: dueOf(t) },
     entries: entries.map(slim),
-    openLink: link ? { url: `${process.env.CLIENT_ORIGIN ?? ""}/pay/${link.token}`, amountPaise: link.amountPaise, expiresAt: link.expiresAt } : null,
+    openLink: link ? { url: `${publicOrigin()}/pay/${link.token}`, amountPaise: link.amountPaise, expiresAt: link.expiresAt } : null,
   });
 });
 
@@ -175,7 +176,7 @@ router.post("/student/:id/links", async (req, res) => {
       data: { studentId: st.id, token, amountPaise: paise, expiresAt: new Date(Date.now() + 7 * 864e5), createdById: req.user.id },
     });
   });
-  const url = `${process.env.CLIENT_ORIGIN ?? ""}/pay/${token}`;
+  const url = `${publicOrigin()}/pay/${token}`;
   res.status(201).json({ link: { url, amountPaise: paise, expiresAt: link.expiresAt }, message: feeLinkMessage(st.name, paise, url) });
 });
 
