@@ -14,6 +14,7 @@ import Receipt from "./pages/Receipt.jsx";
 import Risk from "./pages/Risk.jsx";
 import Alerts from "./pages/Alerts.jsx";
 import PayLink from "./pages/PayLink.jsx";
+import Ask from "./pages/Ask.jsx";
 
 function Protected() {
   const { user, ready } = useAuth();
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="fees" element={<Fees />} />
           <Route path="receipt/:id" element={<Receipt />} />
           <Route path="alerts" element={<Alerts />} />
+          <Route path="ask" element={<Ask />} />
         </Route>
         <Route element={<RoleGate roles={["FACULTY"]} />}>
           <Route path="attendance" element={<Attendance />} />
